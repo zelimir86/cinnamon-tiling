@@ -10,6 +10,7 @@ const Clutter = imports.gi.Clutter;
 const Main = imports.ui.main;
 const Me = imports.ui.extension.getCurrentExtension();
 const U = Me.imports.lib.utils;
+const _ = U._;
 const L = Me.imports.lib.layouts;
 
 const EDITOR_GAP = 8;
@@ -52,10 +53,10 @@ var LayoutEditor = class LayoutEditor {
 
     _buildToolbar() {
         this._toolbar = new St.BoxLayout({ style_class: 'tiling-editor-toolbar', vertical: true, reactive: true });
-        const title = new St.Label({ style_class: 'tiling-editor-title', text: this._isNew ? 'New layout' : `Editing “${this._layout.id}”` });
+        const title = new St.Label({ style_class: 'tiling-editor-title', text: this._isNew ? _('New layout') : _('Editing “%s”').format(this._layout.id) });
         const help = new St.Label({
             style_class: 'tiling-editor-help',
-            text: 'Click: split ▏  Ctrl+click: split ▁  Right click: delete  Drag divider: resize  Ctrl+Z: undo',
+            text: _('Click: split left/right  ·  Ctrl+click: split top/bottom  ·  Right click: delete  ·  Drag a divider: resize  ·  Ctrl+Z: undo'),
         });
         const row = new St.BoxLayout({ style_class: 'tiling-editor-buttons', vertical: false });
         const mk = (label, cls, cb) => {
@@ -64,15 +65,15 @@ var LayoutEditor = class LayoutEditor {
             row.add_child(b);
             return b;
         };
-        mk('Save', 'suggested', () => this._save());
-        mk('Cancel', '', () => this.close());
-        mk('Reset', '', () => {
+        mk(_('Save'), 'suggested', () => this._save());
+        mk(_('Cancel'), '', () => this.close());
+        mk(_('Reset'), '', () => {
             this._pushHistory();
             this._layout.tiles = [{ x: 0, y: 0, width: 1, height: 1, groups: [] }];
             this._rebuild();
         });
         if (!this._isNew && this._c.layouts.length > 1) {
-            mk('Delete layout', 'destructive', () => {
+            mk(_('Delete layout'), 'destructive', () => {
                 this._c.deleteLayout(this._originalId);
                 this.close();
             });
@@ -223,7 +224,7 @@ var LayoutEditor = class LayoutEditor {
                 this._pushHistory();
                 if (!L.deleteTile(this._layout, idx)) {
                     this._history.pop();
-                    Main.notify('Tiling', 'This tile cannot be removed: no neighbour covers its whole side.');
+                    Main.notify(_('Cinnamon Tiling'), _('This tile cannot be removed: no neighbouring tiles cover its whole side.'));
                 }
                 this._rebuild();
             }

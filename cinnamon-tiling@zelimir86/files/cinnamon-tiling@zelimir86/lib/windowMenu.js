@@ -7,6 +7,7 @@ const PopupMenu = imports.ui.popupMenu;
 const WindowMenu = imports.ui.windowMenu;
 const Me = imports.ui.extension.getCurrentExtension();
 const U = Me.imports.lib.utils;
+const _ = U._;
 const W = Me.imports.lib.widgets;
 
 const PER_ROW = 4;
@@ -68,16 +69,16 @@ var WindowMenuPatch = class WindowMenuPatch {
             add(it);
         };
         const empties = () => tm.emptyTiles(mon, win).slice().sort((a, b) => a.x - b.x || a.y - b.y);
-        action('Move to best tile', 'view-grid-symbolic', () => {
+        action(_('Move to best tile'), 'view-grid-symbolic', () => {
             const t = tm.bestTile(mon, win) || this._c.layoutFor(mon).tiles[0];
             tm.tileWindow(win, t, mon);
         });
-        action('Tile to leftmost empty tile', 'go-first-symbolic', () => {
+        action(_('Tile to leftmost empty tile'), 'go-first-symbolic', () => {
             const e = empties();
             if (e.length)
                 tm.tileWindow(win, e[0], mon);
         });
-        action('Tile to rightmost empty tile', 'go-last-symbolic', () => {
+        action(_('Tile to rightmost empty tile'), 'go-last-symbolic', () => {
             const e = empties();
             if (e.length) {
                 const maxX = Math.max(...e.map(t => t.x + t.width));
@@ -85,7 +86,7 @@ var WindowMenuPatch = class WindowMenuPatch {
             }
         });
         if (tm.isTiled(win))
-            action('Untile', 'view-restore-symbolic', () => tm.untileWindow(win));
+            action(_('Untile'), 'view-restore-symbolic', () => tm.untileWindow(win));
     }
 
     destroy() {

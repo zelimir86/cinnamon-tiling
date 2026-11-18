@@ -4,6 +4,7 @@
 const St = imports.gi.St;
 const Clutter = imports.gi.Clutter;
 const Cinnamon = imports.gi.Cinnamon;
+const Pango = imports.gi.Pango;
 const Main = imports.ui.main;
 const Me = imports.ui.extension.getCurrentExtension();
 const U = Me.imports.lib.utils;
@@ -163,7 +164,7 @@ var Suggestions = class Suggestions {
             title.add_child(small);
         }
         const label = new St.Label({ style_class: 'tiling-suggestion-title', text: win.get_title() || '' });
-        label.clutter_text.ellipsize = 3; // Pango.EllipsizeMode.END
+        label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
         label.set_width(cellW - 24 * U.scaleFactor());
         title.add_child(label);
         box.add_child(thumbBin);

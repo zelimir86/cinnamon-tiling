@@ -5,11 +5,11 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Main = imports.ui.main;
 const Util = imports.misc.util;
-const ByteArray = imports.byteArray;
 const Extension = imports.ui.extension;
 
 const Me = Extension.getCurrentExtension();
 const U = Me.imports.lib.utils;
+const _ = U._;
 const L = Me.imports.lib.layouts;
 const SettingsLib = Me.imports.lib.settings;
 const TilingLib = Me.imports.lib.tilingManager;
@@ -82,11 +82,10 @@ var Controller = class Controller {
         // Panels get rebuilt when the user edits them; put the indicator back.
         this._signals.connect(global.settings, 'changed::panels-enabled', () => {
             this._panelTimer = U.removeSource(this._panelTimer);
-            this._panelTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 800, () => {
+            this._panelTimer = U.timeout(800, () => {
                 this._panelTimer = 0;
                 this._destroyIndicator();
                 this._syncIndicator();
-                return GLib.SOURCE_REMOVE;
             });
         });
     }
@@ -186,7 +185,7 @@ var Controller = class Controller {
         this._layouts = L.normalizeLayouts(L.DEFAULT_LAYOUTS);
         this._saveLayouts();
         this.settings.set('selected-layouts', {});
-        Main.notify('Tiling', 'Layouts were reset to the defaults.');
+        Main.notify(_('Cinnamon Tiling'), _('Layouts were reset to the defaults.'));
     }
 
     // ---- UI entry points ---------------------------------------------------
@@ -234,7 +233,7 @@ var Controller = class Controller {
     }
 
     openSettings() {
-        Util.spawnCommandLine(`xlet-settings extension ${U.UUID}`);
+        Util.spawn(['xlet-settings', 'extension', U.UUID]);
     }
 
     _fileDialog(save, cb) {
@@ -244,7 +243,7 @@ var Controller = class Controller {
             cb(fallback);
             return;
         }
-        const argv = [zenity, '--file-selection', '--title', save ? 'Export layouts' : 'Import layouts', '--file-filter=JSON files | *.json'];
+        const argv = [zenity, '--file-selection', '--title', save ? _('Export layouts') : _('Import layouts'), `--file-filter=${_('JSON files')} | *.json`];
         if (save)
             argv.push('--save', '--confirm-overwrite', `--filename=${fallback}`);
         try {
@@ -267,38 +266,42 @@ var Controller = class Controller {
 
     exportLayouts() {
         this._fileDialog(true, path => {
-            try {
-                const data = JSON.stringify(this._layouts, null, 2);
-                GLib.file_set_contents(path, ByteArray.fromString(data));
-                Main.notify('Tiling', `Exported ${this._layouts.length} layouts to ${path}`);
-            } catch (e) {
-                Main.notify('Tiling', `Export failed: ${e.message}`);
-            }
+            const data = new TextEncoder().encode(JSON.stringify(this._layouts, null, 2));
+            const file = Gio.File.new_for_path(path);
+            file.replace_contents_bytes_async(new GLib.Bytes(data), null, false,
+                Gio.FileCreateFlags.REPLACE_DESTINATION, null, (f, res) => {
+                    try {
+                        f.replace_contents_finish(res);
+                        Main.notify(_('Cinnamon Tiling'), _('Exported %d layouts to %s.').format(this._layouts.length, path));
+                    } catch (e) {
+                        Main.notify(_('Cinnamon Tiling'), _('Export failed: %s').format(e.message));
+                    }
+                });
         });
     }
 
     importLayouts() {
         this._fileDialog(false, path => {
-            try {
-                const [ok, bytes] = GLib.file_get_contents(path);
-                if (!ok)
-                    throw new Error('cannot read file');
-                const parsed = JSON.parse(ByteArray.toString(bytes));
-                const incoming = L.normalizeLayouts(Array.isArray(parsed) ? parsed : [parsed]);
-                if (incoming.length === 0)
-                    throw new Error('no valid layouts in file');
-                for (const l of incoming) {
-                    const i = this._layouts.findIndex(x => x.id === l.id);
-                    if (i >= 0)
-                        this._layouts[i] = l;
-                    else
-                        this._layouts.push(l);
+            Gio.File.new_for_path(path).load_contents_async(null, (f, res) => {
+                try {
+                    const [, bytes] = f.load_contents_finish(res);
+                    const parsed = JSON.parse(new TextDecoder().decode(bytes));
+                    const incoming = L.normalizeLayouts(Array.isArray(parsed) ? parsed : [parsed]);
+                    if (incoming.length === 0)
+                        throw new Error(_('The file contains no valid layouts.'));
+                    for (const l of incoming) {
+                        const i = this._layouts.findIndex(x => x.id === l.id);
+                        if (i >= 0)
+                            this._layouts[i] = l;
+                        else
+                            this._layouts.push(l);
+                    }
+                    this._saveLayouts();
+                    Main.notify(_('Cinnamon Tiling'), _('Imported %d layouts.').format(incoming.length));
+                } catch (e) {
+                    Main.notify(_('Cinnamon Tiling'), _('Import failed: %s').format(e.message));
                 }
-                this._saveLayouts();
-                Main.notify('Tiling', `Imported ${incoming.length} layouts.`);
-            } catch (e) {
-                Main.notify('Tiling', `Import failed: ${e.message}`);
-            }
+            });
         });
     }
 
@@ -344,7 +347,7 @@ var Controller = class Controller {
 
     _scheduleKeys(reapply = false) {
         this._keysTimer = U.removeSource(this._keysTimer);
-        this._keysTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, reapply ? 300 : 500, () => {
+        this._keysTimer = U.timeout(reapply ? 300 : 500, () => {
             this._keysTimer = 0;
             try {
                 if (reapply) {
@@ -358,7 +361,6 @@ var Controller = class Controller {
             } catch (e) {
                 U.logError(e, 'keybindings');
             }
-            return GLib.SOURCE_REMOVE;
         });
     }
 
@@ -459,6 +461,7 @@ var Controller = class Controller {
             this._border.destroy();
         this.tiling.destroy();
         this.settings.destroy();
+        U.clearAllSources();
     }
 };
 

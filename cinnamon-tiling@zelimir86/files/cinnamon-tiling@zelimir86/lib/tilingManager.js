@@ -3,7 +3,6 @@
 // raise-together.
 
 const Meta = imports.gi.Meta;
-const GLib = imports.gi.GLib;
 const Me = imports.ui.extension.getCurrentExtension();
 const U = Me.imports.lib.utils;
 const L = Me.imports.lib.layouts;
@@ -285,14 +284,7 @@ var TilingManager = class TilingManager {
         };
         if (this.settings.get('enable-snap-assist'))
             this._snapAssist.open(this._drag.monitor);
-        this._dragTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 16, () => {
-            try {
-                this._onDragTick();
-            } catch (e) {
-                U.logError(e, 'drag tick');
-            }
-            return GLib.SOURCE_CONTINUE;
-        });
+        this._dragTimer = U.interval(16, () => this._onDragTick());
     }
 
     _tilingSystemActive(mods) {

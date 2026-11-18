@@ -8,6 +8,7 @@ const Main = imports.ui.main;
 const PopupMenu = imports.ui.popupMenu;
 const Me = imports.ui.extension.getCurrentExtension();
 const U = Me.imports.lib.utils;
+const _ = U._;
 const W = Me.imports.lib.widgets;
 
 const COLUMNS = 3;
@@ -73,7 +74,7 @@ var Indicator = class Indicator {
         const mons = U.monitors();
 
         const header = new PopupMenu.PopupBaseMenuItem({ reactive: false });
-        header.addActor(new St.Label({ text: 'Tiling layouts', style_class: 'tiling-menu-header' }));
+        header.addActor(new St.Label({ text: _('Tiling layouts'), style_class: 'tiling-menu-header' }));
         this.menu.addMenuItem(header);
 
         if (mons.length > 1) {
@@ -87,8 +88,8 @@ var Indicator = class Indicator {
                 });
                 row.add_child(b);
             };
-            mk('All monitors', -1);
-            mons.forEach((m, i) => mk(`Monitor ${i + 1}`, i));
+            mk(_('All monitors'), -1);
+            mons.forEach((m, i) => mk(_('Monitor %d').format(i + 1), i));
             const item = new PopupMenu.PopupBaseMenuItem({ reactive: false });
             item.addActor(row);
             this.menu.addMenuItem(item);
@@ -130,11 +131,11 @@ var Indicator = class Indicator {
             });
             this.menu.addMenuItem(it);
         };
-        action('Edit current layout', 'document-edit-symbolic', () => this._c.openEditor(currentId, currentMon));
-        action('New layout', 'list-add-symbolic', () => this._c.newLayout(currentMon));
-        action('Import layouts…', 'document-open-symbolic', () => this._c.importLayouts());
-        action('Export layouts…', 'document-save-symbolic', () => this._c.exportLayouts());
-        action('Settings', 'preferences-system-symbolic', () => this._c.openSettings());
+        action(_('Edit current layout'), 'document-edit-symbolic', () => this._c.openEditor(currentId, currentMon));
+        action(_('New layout'), 'list-add-symbolic', () => this._c.newLayout(currentMon));
+        action(_('Import layouts…'), 'document-open-symbolic', () => this._c.importLayouts());
+        action(_('Export layouts…'), 'document-save-symbolic', () => this._c.exportLayouts());
+        action(_('Settings'), 'preferences-system-symbolic', () => this._c.openSettings());
     }
 
     destroy() {

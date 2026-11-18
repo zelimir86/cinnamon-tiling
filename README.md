@@ -32,7 +32,8 @@ automatski.
 ## Instalacija
 
 ```bash
-cp -r cinnamon-tiling@zelimir86 ~/.local/share/cinnamon/extensions/
+git clone https://github.com/zelimir86/cinnamon-tiling.git
+cp -r cinnamon-tiling/cinnamon-tiling@zelimir86/files/cinnamon-tiling@zelimir86 ~/.local/share/cinnamon/extensions/
 ```
 
 Zatim **Sistemske postavke → Ekstenzije → Cinnamon Tiling → +** (ili `cinnamon-settings extensions`).
@@ -51,19 +52,39 @@ Originalne vrijednosti se pamte i vraćaju kad isključiš ekstenziju. Oba pona�
 
 ## Struktura
 
+Repozitorij prati strukturu [Cinnamon Spices](https://cinnamon-spices.linuxmint.com/) repozitorija:
+
 ```
 cinnamon-tiling@zelimir86/
-  extension.js          kontroler: postavke, layouti, prepisivanje Cinnamon postavki
-  lib/layouts.js        model layouta, razmaci, spajanje/dijeljenje/brisanje tileova, razdjelnici
-  lib/tilingManager.js  povlačenje prozora, rubovi ekrana, pametna promjena veličine, auto-tiling
-  lib/snapAssist.js     snap assistant
-  lib/editor.js         editor layouta
-  lib/keybindings.js    tipkovničke akcije
-  lib/suggestions.js    prijedlozi prozora
-  lib/indicator.js      indikator na panelu i OSD za promjenu layouta
-  lib/windowMenu.js     tiling sekcija u meniju prozora
-  lib/windowBorder.js   obrub fokusiranog prozora
-  lib/widgets.js        sličice layouta, pregledi
+  info.json, screenshot.png, README.md     podaci za Cinnamon Spices
+  files/cinnamon-tiling@zelimir86/         sama ekstenzija
+    metadata.json, settings-schema.json, stylesheet.css, icon.png
+    po/                   šablon za prevode (.pot) i prevodi (.po)
+    extension.js          kontroler: postavke, layouti, prepisivanje Cinnamon postavki
+    lib/layouts.js        model layouta, razmaci, spajanje/dijeljenje/brisanje tileova, razdjelnici
+    lib/tilingManager.js  povlačenje prozora, rubovi ekrana, pametna promjena veličine, auto-tiling
+    lib/snapAssist.js     snap assistant
+    lib/editor.js         editor layouta
+    lib/keybindings.js    tipkovničke akcije
+    lib/suggestions.js    prijedlozi prozora
+    lib/indicator.js      indikator na panelu i OSD za promjenu layouta
+    lib/windowMenu.js     tiling sekcija u meniju prozora
+    lib/windowBorder.js   obrub fokusiranog prozora
+    lib/widgets.js        sličice layouta, pregledi
 ```
 
 Logovi i greške: Looking Glass (`Alt+F2` → `lg`) ili `~/.xsession-errors`.
+
+## Razvoj uz Claude Code
+
+Ekstenzija je implementirana uz pomoć [Claude Code](https://claude.com/claude-code), Anthropicovog AI
+asistenta za programiranje. Kod je napisan za ovaj projekat (nije prenesen iz Tiling Shella), a testiran je
+i ispravljan na stvarnom Cinnamon 6.8 desktopu.
+
+## Licenca
+
+GPL-2.0-or-later. Puni tekst licence je u [LICENSE](LICENSE).
+
+Ideja i skup funkcija su po uzoru na [Tiling Shell](https://github.com/domferr/tilingshell) (autor
+domferr, GPL-2.0). Od njega su preuzeti nazivi postavki i prečica, JSON format rasporeda i četiri
+default rasporeda, radi kompatibilnosti.

@@ -5,9 +5,16 @@ const Meta = imports.gi.Meta;
 const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
 const St = imports.gi.St;
+const Gettext = imports.gettext;
 
 var EPS = 0.002;
 var UUID = 'cinnamon-tiling@zelimir86';
+
+Gettext.bindtextdomain(UUID, GLib.get_home_dir() + '/.local/share/locale');
+
+function _(text) {
+    return Gettext.dgettext(UUID, text);
+}
 
 function log(msg) {
     global.log(`[${UUID}] ${msg}`);
@@ -179,32 +186,60 @@ function ease(actor, props) {
         onComplete();
 }
 
-function idle(fn) {
-    return GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+// Every one-shot main loop source is tracked here so disable() can cancel
+// whatever is still pending (see clearAllSources()).
+var _sources = new Set();
+
+function _oneShot(add, label, fn) {
+    let id = 0;
+    id = add(() => {
+        _sources.delete(id);
         try {
             fn();
         } catch (e) {
-            logError(e, 'idle callback');
+            logError(e, label);
         }
         return GLib.SOURCE_REMOVE;
     });
+    _sources.add(id);
+    return id;
+}
+
+function idle(fn) {
+    return _oneShot(cb => GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, cb), 'idle callback', fn);
 }
 
 function timeout(ms, fn) {
-    return GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
+    return _oneShot(cb => GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, cb), 'timeout callback', fn);
+}
+
+// Repeating source; runs until removed with removeSource().
+function interval(ms, fn) {
+    const id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
         try {
             fn();
         } catch (e) {
-            logError(e, 'timeout callback');
+            logError(e, 'interval callback');
         }
-        return GLib.SOURCE_REMOVE;
+        return GLib.SOURCE_CONTINUE;
     });
+    _sources.add(id);
+    return id;
 }
 
+// Remove a source created with idle()/timeout()/interval(); returns 0 to reset the caller's id.
 function removeSource(id) {
-    if (id)
+    if (id && _sources.has(id)) {
+        _sources.delete(id);
         GLib.source_remove(id);
+    }
     return 0;
+}
+
+function clearAllSources() {
+    for (const id of _sources)
+        GLib.source_remove(id);
+    _sources.clear();
 }
 
 // Tracks GObject signal connections so they can be dropped in one call.
